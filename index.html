@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final App · Fixed Nav/Footer & Developer Name</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        html, body { height: 100%; }
+        body {
+            background: #f5f7fb;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+            padding-top: 70px;          /* space for fixed navbar */
+            padding-bottom: 80px;        /* extra space for fixed footer */
+            position: relative;
+        }
+        /* Dark theme – improved contrast */
+        body.dark-theme {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        body.dark-theme .navbar,
+        body.dark-theme .side-menu,
+        body.dark-theme .customer-form-card,
+        body.dark-theme .customer-list-section,
+        body.dark-theme .section-card,
+        body.dark-theme .section-placeholder,
+        body.dark-theme .user-dropdown,
+        body.dark-theme .balance-card,
+        body.dark-theme footer {
+            background: #1e293b;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        body.dark-theme .input-wrapper {
+            background: #0f172a;
+            border-color: #475569;
+        }
+        body.dark-theme .input-wrapper i {
+            color: #94a3b8;
+        }
+        body.dark-theme .input-wrapper input,
+        body.dark-theme .input-wrapper select {
+            color: #f1f5f9;
+            background: transparent;
+        }
+        body.dark-theme .input-wrapper input::placeholder {
+            color: #64748b;
+        }
+        body.dark-theme .form-group label {
+            color: #cbd5e1;
+        }
+        body.dark-theme .customer-table th {
+            color: #94a3b8;
+            border-bottom-color: #334155;
+        }
+        body.dark-theme .customer-table td {
+            color: #e2e8f0;
+            border-bottom-color: #334155;
+        }
+        body.dark-theme .dropdown-item {
+            color: #e2e8f0;
+        }
+        body.dark-theme .dropdown-item:hover {
+            background: #334155;
+        }
+        body.dark-theme .delete-btn {
+            color: #f87171;
+        }
+        body.dark-theme .delete-btn:hover {
+            color: #ef4444;
+        }
+        body.dark-theme .btn-add-customer {
+            background: #2563eb;
+            border-color: #1d4ed8;
+        }
+        body.dark-theme .auth-tab {
+            color: #94a3b8;
+        }
+        body.dark-theme .auth-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        body.dark-theme .balance-card .label {
+            color: #94a3b8;
+        }
+        body.dark-theme .balance-card .amount {
+            color: #f1f5f9;
+        }
+        body.dark-theme .type-badge {
+            color: #0f172a;
+        }
+        body.dark-theme .type-deposited { background: #93c5fd; color: #1e3a8a; }
+        body.dark-theme .type-paid { background: #86efac; color: #14532d; }
+        body.dark-theme .type-withdraw { background: #fca5a5; color: #7f1d1d; }
+
+        /* Fixed navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex; align-items: center; justify-content: space-between; background: white;
+            padding: 0.6rem 2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            transition: background-color 0.3s;
+            z-index: 1000;
+        }
+        .nav-left .menu-btn {
+            background: none; border: none; font-size: 1.8rem; color: #1e293b; cursor: pointer;
+            padding: 0.2rem 0.6rem; border-radius: 8px;
+        }
+        .menu-btn:hover { background: #eef2f6; }
+        .nav-center { flex: 1; display: flex; justify-content: center; margin: 0 2rem; }
+        .search-wrapper {
+            width: 100%; max-width: 400px; display: flex; background: #f1f5f9; border-radius: 40px;
+            padding: 0.3rem 1rem; align-items: center; border: 1px solid #d1d9e6;
+        }
+        .search-wrapper input { border: none; background: transparent; width: 100%; padding: 0.6rem 0; outline: none; }
+        .search-wrapper i { color: #64748b; margin-right: 0.5rem; }
+        .nav-right { position: relative; }
+        .user-btn {
+            background: none; border: none; font-size: 1.8rem; color: #1e293b; cursor: pointer;
+            padding: 0.2rem 0.6rem; border-radius: 50%;
+        }
+        .user-btn:hover { background: #eef2f6; }
+
+        /* user dropdown */
+        .user-dropdown {
+            position: absolute; right: 0; top: 50px; background: white; min-width: 220px;
+            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 0.5rem 0;
+            opacity: 0; visibility: hidden; transform: translateY(-8px); transition: 0.2s; z-index: 100;
+        }
+        .user-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 1.2rem; color: #1e293b; cursor: pointer; }
+        .dropdown-item:hover { background: #f8fafc; }
+        .dropdown-divider { height: 1px; background: #e2e8f0; margin: 0.4rem 0; }
+
+        /* side menu */
+        .side-menu {
+            position: fixed; top: 0; left: -260px; width: 260px; height: 100vh; background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1); transition: left 0.25s; z-index: 1001; padding: 2rem 1rem;
+        }
+        .side-menu.open { left: 0; }
+        .menu-header { display: flex; align-items: center; margin-bottom: 2rem; }
+        .menu-header h3 { font-size: 1.3rem; color: #0f172a; margin-left: 1rem; }
+        .close-menu { background: none; border: none; font-size: 1.5rem; margin-left: auto; cursor: pointer; color: #64748b; }
+        .side-menu ul { list-style: none; }
+        .side-menu li { padding: 0.8rem 1rem; display: flex; align-items: center; gap: 1rem; color: #1e293b; border-radius: 8px; cursor: pointer; }
+        .side-menu li:hover { background: #f1f5f9; }
+        .side-menu li i { width: 1.6rem; color: #3b82f6; }
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2);
+            z-index: 1000; opacity: 0; visibility: hidden; transition: 0.2s;
+        }
+        .overlay.show { opacity: 1; visibility: visible; }
+
+        /* main content – scrollable area between fixed navbar and footer */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem 2rem 1.5rem; /* extra bottom padding for spacing */
+            width: 100%;
+        }
+
+        /* dashboard header */
+        .dashboard-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;
+        }
+        .dashboard-header h1 { font-size: 2rem; color: #1e293b; }
+        .welcome-badge { background: white; padding: 0.4rem 1.2rem; border-radius: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+
+        .btn-add-customer {
+            background: #3b82f6; border: none; color: white; font-size: 1.1rem; font-weight: 500;
+            padding: 0.8rem 2rem; border-radius: 40px; display: inline-flex; align-items: center; gap: 0.6rem;
+            cursor: pointer; border: 1px solid #2563eb; margin-bottom: 2rem;
+        }
+        .btn-add-customer:hover { background: #2563eb; }
+
+        /* customer form */
+        .customer-form-card {
+            background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            max-width: 600px; margin: 1.5rem 0; border: 1px solid #e2e8f0; display: none;
+        }
+        .customer-form-card.show { display: block; }
+        .form-title {
+            font-size: 1.5rem; font-weight: 600; color: #0f172a; margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;
+        }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label {
+            font-weight: 600; color: #334155; display: block; margin-bottom: 0.4rem; font-size: 0.95rem;
+        }
+        .input-wrapper {
+            display: flex; align-items: center; background: #f8fafc; border-radius: 10px;
+            padding: 0.3rem 1rem; border: 1px solid #cbd5e1; transition: 0.15s;
+        }
+        .input-wrapper:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 2px #bfdbfe; }
+        .input-wrapper i { color: #64748b; margin-right: 0.6rem; font-size: 1rem; }
+        .input-wrapper input, .input-wrapper select {
+            border: none; background: transparent; width: 100%; padding: 0.6rem 0; outline: none; font-size: 1rem;
+        }
+
+        .phone-group { display: flex; gap: 1rem; }
+        .phone-group .input-wrapper:first-child { width: 130px; }
+
+        .amount-type-group { display: flex; gap: 1.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        .type-option { display: flex; align-items: center; gap: 0.4rem; }
+        .type-option input[type="radio"] { accent-color: #3b82f6; width: 1.1rem; height: 1.1rem; margin: 0; }
+        .type-option label { color: #1e293b; font-weight: 400; }
+
+        .btn-save {
+            background: #10b981; border: none; color: white; font-size: 1.2rem; font-weight: 600;
+            padding: 0.8rem 1.5rem; border-radius: 10px; width: 100%; display: flex; align-items: center;
+            justify-content: center; gap: 0.8rem; cursor: pointer; border: 1px solid #059669;
+            margin-top: 1rem; transition: background 0.15s;
+        }
+        .btn-save:hover { background: #059669; }
+
+        /* customer list */
+        .customer-list-section {
+            margin-top: 2rem; background: white; border-radius: 16px; padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;
+            overflow-x: auto;
+        }
+        .customer-list-section h2 { font-size: 1.5rem; color: #0f172a; margin-bottom: 1rem; }
+        .customer-table {
+            width: 100%; border-collapse: collapse; min-width: 550px;
+        }
+        .customer-table th {
+            text-align: left; padding: 0.75rem 0.5rem; color: #475569; border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .customer-table td {
+            padding: 0.6rem 0.5rem; border-bottom: 1px solid #f1f5f9;
+            word-break: break-word;
+        }
+        .type-badge {
+            display: inline-block; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 500;
+            white-space: nowrap;
+        }
+        .type-deposited { background: #dbeafe; color: #1e40af; }
+        .type-paid { background: #dcfce7; color: #166534; }
+        .type-withdraw { background: #fee2e2; color: #991b1b; }
+
+        .delete-btn {
+            color: #dc2626; background: none; border: none; font-size: 1.2rem; cursor: pointer;
+            transition: color 0.15s; padding: 0 4px;
+        }
+        .delete-btn:hover { color: #b91c1c; }
+
+        .empty-message { color: #94a3b8; font-style: italic; padding: 1rem; }
+
+        /* Transactions table */
+        .transactions-table {
+            width: 100%; border-collapse: collapse; min-width: 700px;
+        }
+        .transactions-table th {
+            text-align: left; padding: 0.75rem 0.5rem; color: #475569; border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .transactions-table td {
+            padding: 0.6rem 0.5rem; border-bottom: 1px solid #f1f5f9;
+            word-break: break-word;
+        }
+
+        /* Balance cards */
+        .balance-cards {
+            display: flex; gap: 2rem; flex-wrap: wrap; margin-top: 1.5rem;
+        }
+        .balance-card {
+            background: white; border-radius: 20px; padding: 1.5rem 2rem; flex: 1 1 200px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .balance-card i { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .balance-card .label { font-size: 1.1rem; color: #475569; margin-bottom: 0.5rem; }
+        .balance-card .amount { font-size: 2rem; font-weight: 700; color: #0f172a; }
+        .card-deposited i { color: #3b82f6; }
+        .card-paid i { color: #10b981; }
+        .card-withdraw i { color: #ef4444; }
+
+        /* Section cards */
+        .section-card {
+            background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;
+        }
+        .section-placeholder {
+            background: white; border-radius: 16px; padding: 3rem; text-align: center; color: #64748b; display: none;
+        }
+
+        /* Auth forms */
+        .auth-container {
+            max-width: 500px; margin: 0 auto;
+        }
+        .auth-tabs {
+            display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #e2e8f0;
+        }
+        .auth-tab {
+            padding: 0.5rem 1rem; font-weight: 600; cursor: pointer; color: #64748b;
+            border-bottom: 2px solid transparent; margin-bottom: -2px;
+        }
+        .auth-tab.active {
+            color: #3b82f6; border-bottom-color: #3b82f6;
+        }
+        .auth-form {
+            display: none;
+        }
+        .auth-form.active {
+            display: block;
+        }
+        .auth-form .input-wrapper {
+            margin-bottom: 1rem;
+        }
+        .btn-auth {
+            background: #3b82f6; color: white; border: none; padding: 0.8rem; border-radius: 10px;
+            width: 100%; font-weight: 600; cursor: pointer; margin-top: 1rem;
+        }
+        .btn-auth:hover { background: #2563eb; }
+
+        /* Profile card */
+        .profile-card {
+            text-align: center; padding: 2rem;
+        }
+        .profile-card i {
+            font-size: 4rem; color: #3b82f6; margin-bottom: 1rem;
+        }
+        .btn-logout {
+            background: #ef4444; color: white; border: none; padding: 0.8rem 2rem;
+            border-radius: 40px; font-weight: 600; cursor: pointer; margin-top: 1.5rem;
+        }
+        .btn-logout:hover { background: #dc2626; }
+
+        /* Theme toggle */
+        .theme-option {
+            display: flex; align-items: center; gap: 1rem; margin: 1rem 0;
+            padding: 1rem; border: 1px solid #e2e8f0; border-radius: 12px; cursor: pointer;
+        }
+        .theme-option:hover { background: #f8fafc; }
+        .theme-option input { margin-right: 1rem; }
+
+        /* Rate us */
+        .rate-stars {
+            font-size: 2rem; color: #fbbf24; margin: 1rem 0;
+        }
+        .rate-stars i { cursor: pointer; margin: 0 0.2rem; }
+        .rate-stars i:hover { color: #f59e0b; }
+
+        .team-list {
+            list-style: none; margin-top: 1rem; font-size: 1.2rem;
+        }
+        .team-list li { margin: 0.5rem 0; }
+        .team-list i { color: #3b82f6; width: 2rem; }
+
+        /* Fixed footer */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 1rem 2rem;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            transition: background-color 0.3s, border-color 0.3s;
+            z-index: 1000;
+        }
+        footer p {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+        footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        body.dark-theme footer p {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-left"><button class="menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button></div>
+    <div class="nav-center"><div class="search-wrapper"><i class="fas fa-search"></i><input type="text" placeholder="Search..."></div></div>
+    <div class="nav-right">
+        <button class="user-btn" id="userToggle"><i class="fas fa-user-circle"></i></button>
+        <div class="user-dropdown" id="userDropdown">
+            <div class="dropdown-item" id="dynamicAuthItem"><i class="fas fa-user-plus"></i><span>Create account</span></div>
+            <div class="dropdown-item" id="logoutItem"><i class="fas fa-sign-out-alt"></i><span>Logout</span></div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" id="settingsItem"><i class="fas fa-cog"></i><span>Settings</span></div>
+            <div class="dropdown-item" id="privacyItem"><i class="fas fa-lock"></i><span>Privacy</span></div>
+            <div class="dropdown-item" id="rateItem"><i class="fas fa-star"></i><span>Rate us</span></div>
+        </div>
+    </div>
+</nav>
+
+<div class="side-menu" id="sideMenu">
+    <div class="menu-header"><i class="fas fa-bars"></i><h3>Menu</h3><button class="close-menu" id="closeMenuBtn"><i class="fas fa-times"></i></button></div>
+    <ul>
+        <li id="menuHome"><i class="fas fa-home"></i> Home / Dashboard</li>
+        <li id="menuTransactions"><i class="fas fa-history"></i> Transactions history</li>
+        <li id="menuBalance"><i class="fas fa-wallet"></i> Balance summary</li>
+        <li id="menuServices"><i class="fas fa-concierge-bell"></i> Services</li>
+        <li id="menuAbout"><i class="fas fa-info-circle"></i> About us</li>
+        <li id="menuContacts"><i class="fas fa-address-book"></i> Contacts</li>
+    </ul>
+</div>
+<div class="overlay" id="overlay"></div>
+
+<div class="main-content" id="mainContent">
+    <!-- DASHBOARD SECTION -->
+    <div id="dashboardSection">
+        <div class="dashboard-header">
+            <h1><i class="fas fa-chart-pie" style="margin-right: 8px;"></i>Dashboard</h1>
+            <span class="welcome-badge"><i class="fas fa-hand-wave"></i> <span id="welcomeUser">Welcome</span></span>
+        </div>
+
+        <button class="btn-add-customer" id="showFormBtn"><i class="fas fa-user-plus"></i> Add new customer</button>
+
+        <!-- customer form with updated placeholders and TZS -->
+        <div class="customer-form-card" id="customerForm">
+            <div class="form-title">Register new customer</div>
+            <form id="registerCustomerForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label><i class="far fa-user"></i> Full name</label>
+                    <div class="input-wrapper"><i class="fas fa-user"></i><input type="text" id="customerName" placeholder="e.g. Erick Laulent" required></div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-phone-alt"></i> Phone number</label>
+                    <div class="phone-group">
+                        <div class="input-wrapper"><i class="fas fa-globe"></i>
+                            <select id="countryCode">
+                                <option value="+1">+1 (USA)</option><option value="+44">+44 (UK)</option>
+                                <option value="+255" selected>+255 (TZ)</option><option value="+254">+254 (KE)</option>
+                                <option value="+256">+256 (UG)</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper"><i class="fas fa-mobile-alt"></i><input type="tel" id="phoneNumber" placeholder="712345678" required></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-coins"></i> Amount (TZS) & type</label>
+                    <div class="input-wrapper" style="margin-bottom: 1rem;">
+                        <span style="font-weight: 600; margin-right: 0.5rem; color: #64748b;">TZS</span>
+                        <input type="number" step="0.01" id="amount" placeholder="0.00" required>
+                    </div>
+                    <div class="amount-type-group">
+                        <div class="type-option"><input type="radio" name="amountType" id="typeDeposited" value="deposited" checked> <label for="typeDeposited">Deposited</label></div>
+                        <div class="type-option"><input type="radio" name="amountType" id="typePaid" value="paid"> <label for="typePaid">Paid</label></div>
+                        <div class="type-option"><input type="radio" name="amountType" id="typeWithdraw" value="withdraw"> <label for="typeWithdraw">Withdraw</label></div>
+                    </div>
+                </div>
+                <button type="button" class="btn-save" id="saveCustomerBtn"><i class="fas fa-save"></i> Save customer</button>
+            </form>
+        </div>
+
+        <!-- customer list -->
+        <div class="customer-list-section">
+            <h2><i class="fas fa-users"></i> Registered customers</h2>
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Amount (TZS)</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="customerListBody">
+                    <tr><td colspan="5" class="empty-message">No customers added yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TRANSACTIONS HISTORY SECTION -->
+    <div id="transactionsSection" class="section-card" style="display: none;">
+        <h2 style="font-size: 1.8rem; color: #0f172a; margin-bottom: 1.5rem;"><i class="fas fa-history"></i> Transactions history</h2>
+        <div style="overflow-x: auto;">
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Date & time</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Amount (TZS)</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsListBody">
+                    <tr><td colspan="5" class="empty-message">No transactions yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- BALANCE SUMMARY SECTION -->
+    <div id="balanceSection" class="section-card" style="display: none;">
+        <h2 style="font-size: 1.8rem; color: #0f172a; margin-bottom: 1rem;"><i class="fas fa-wallet"></i> Balance summary</h2>
+        <div class="balance-cards">
+            <div class="balance-card card-deposited">
+                <i class="fas fa-arrow-down"></i>
+                <div class="label">Total Deposited</div>
+                <div class="amount" id="totalDeposited">TZS 0.00</div>
+            </div>
+            <div class="balance-card card-paid">
+                <i class="fas fa-check-circle"></i>
+                <div class="label">Total Paid</div>
+                <div class="amount" id="totalPaid">TZS 0.00</div>
+            </div>
+            <div class="balance-card card-withdraw">
+                <i class="fas fa-arrow-up"></i>
+                <div class="label">Total Withdraw</div>
+                <div class="amount" id="totalWithdraw">TZS 0.00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SERVICES SECTION -->
+    <div id="servicesSection" class="section-placeholder" style="display: none;">
+        <i class="fas fa-concierge-bell" style="font-size: 3rem; color: #3b82f6;"></i>
+        <h2 style="margin: 1rem 0;">Our Services</h2>
+        <p>We are a team of student developers offering web development and design services.</p>
+        <div style="margin-top: 2rem;">
+            <h3>Meet the team:</h3>
+            <ul class="team-list">
+                <li><i class="fas fa-user"></i> Erick Laulent</li>
+                <li><i class="fas fa-user"></i> Ibrahim Bwiru</li>
+                <li><i class="fas fa-user"></i> Jabiri Makorani</li>
+                <li><i class="fas fa-user"></i> Zambi John</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ABOUT US SECTION -->
+    <div id="aboutSection" class="section-placeholder" style="display: none;">
+        <i class="fas fa-info-circle" style="font-size: 3rem; color: #3b82f6;"></i>
+        <h2 style="margin: 1rem 0;">About Us</h2>
+        <p>We are passionate developers currently building amazing web applications.</p>
+        <div style="margin-top: 2rem;">
+            <h3>Our team:</h3>
+            <ul class="team-list">
+                <li><i class="fas fa-user"></i> Erick Laulent</li>
+                <li><i class="fas fa-user"></i> Ibrahim Bwiru</li>
+                <li><i class="fas fa-user"></i> Jabiri Makorani</li>
+                <li><i class="fas fa-user"></i> Zambi John</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- CONTACTS SECTION -->
+    <div id="contactsSection" class="section-placeholder" style="display: none;">
+        <i class="fas fa-address-book" style="font-size: 3rem; color: #3b82f6;"></i>
+        <h2>Contacts</h2>
+        <p>Email: ericklaulent78@gmail.com</p>
+    </div>
+
+    <!-- AUTH SECTION (Login/Register/Profile) -->
+    <div id="authSection" class="section-card" style="display: none;">
+        <div id="authNotLoggedIn">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <div class="auth-tab active" data-tab="login">Login</div>
+                    <div class="auth-tab" data-tab="register">Register</div>
+                </div>
+                <div id="loginForm" class="auth-form active">
+                    <h3 style="margin-bottom: 1rem;">Sign in to your account</h3>
+                    <div class="input-wrapper"><i class="fas fa-envelope"></i><input type="email" id="loginEmail" placeholder="Email" required></div>
+                    <div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="Password" required></div>
+                    <button class="btn-auth" id="loginBtn">Login</button>
+                </div>
+                <div id="registerForm" class="auth-form">
+                    <h3 style="margin-bottom: 1rem;">Create new account</h3>
+                    <div class="input-wrapper"><i class="fas fa-user"></i><input type="text" id="regName" placeholder="Full name" required></div>
+                    <div class="input-wrapper"><i class="fas fa-envelope"></i><input type="email" id="regEmail" placeholder="Email" required></div>
+                    <div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="Password" required></div>
+                    <button class="btn-auth" id="registerBtn">Register</button>
+                </div>
+            </div>
+        </div>
+        <div id="authLoggedIn" style="display: none;">
+            <div class="profile-card">
+                <i class="fas fa-user-circle"></i>
+                <h2 id="profileName">Erick Laulent</h2>
+                <p id="profileEmail">erick@example.com</p>
+                <button class="btn-logout" id="profileLogoutBtn">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS SECTION -->
+    <div id="settingsSection" class="section-card" style="display: none;">
+        <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem;"><i class="fas fa-cog"></i> Settings</h2>
+        <h3>App Theme</h3>
+        <div class="theme-option" id="themeLight">
+            <input type="radio" name="theme" id="lightTheme" checked> <label for="lightTheme">Light mode</label>
+        </div>
+        <div class="theme-option" id="themeDark">
+            <input type="radio" name="theme" id="darkTheme"> <label for="darkTheme">Dark mode</label>
+        </div>
+    </div>
+
+    <!-- PRIVACY SECTION -->
+    <div id="privacySection" class="section-card" style="display: none;">
+        <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem;"><i class="fas fa-lock"></i> Privacy</h2>
+        <p>We value your privacy. Your personal data is stored securely and never shared with third parties. This is a demo application, so please do not enter real sensitive information.</p>
+        <p style="margin-top: 1rem;">For any concerns, contact our privacy officer at privacy ericklaulent78@gmail.com.</p>
+    </div>
+
+    <!-- RATE US SECTION -->
+    <div id="rateSection" class="section-card" style="display: none;">
+        <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem;"><i class="fas fa-star"></i> Rate us</h2>
+        <p>If you like our app, please rate it on the store!</p>
+        <div class="rate-stars">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+        </div>
+        <button class="btn-auth" id="rateNowBtn" style="width: auto; padding: 0.8rem 2rem;">Rate now</button>
+        <p style="margin-top: 1rem; color: #64748b;">(This will open a simulated rating page)</p>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2026 Student Developer Team — <a href="#">Erick Laulent</a>,<a href="#">Jabiri Makorani</a>. All rights reserved.</p>
+</footer>
+
+<script>
+    (function() {
+        // ---------- MENU & DROPDOWN ----------
+        const menuToggle = document.getElementById('menuToggle');
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+        const closeBtn = document.getElementById('closeMenuBtn');
+        const userToggle = document.getElementById('userToggle');
+        const userDropdown = document.getElementById('userDropdown');
+
+        menuToggle.addEventListener('click', () => { sideMenu.classList.add('open'); overlay.classList.add('show'); });
+        closeBtn.addEventListener('click', () => { sideMenu.classList.remove('open'); overlay.classList.remove('show'); });
+        overlay.addEventListener('click', () => { sideMenu.classList.remove('open'); overlay.classList.remove('show'); });
+
+        userToggle.addEventListener('click', (e) => { e.stopPropagation(); userDropdown.classList.toggle('show'); });
+        document.addEventListener('click', (e) => {
+            if (!userToggle.contains(e.target) && !userDropdown.contains(e.target)) userDropdown.classList.remove('show');
+        });
+
+        // ---------- USER AUTH STATE ----------
+        let loggedIn = false;
+        let currentUser = null; // { name, email }
+
+        // DOM elements for auth
+        const authNotLoggedIn = document.getElementById('authNotLoggedIn');
+        const authLoggedIn = document.getElementById('authLoggedIn');
+        const profileName = document.getElementById('profileName');
+        const profileEmail = document.getElementById('profileEmail');
+        const welcomeUser = document.getElementById('welcomeUser');
+        const dynamicAuthItem = document.getElementById('dynamicAuthItem');
+        const authSpan = dynamicAuthItem.querySelector('span');
+        const logoutItem = document.getElementById('logoutItem');
+        const profileLogoutBtn = document.getElementById('profileLogoutBtn');
+
+        function updateAuthUI() {
+            if (loggedIn && currentUser) {
+                authNotLoggedIn.style.display = 'none';
+                authLoggedIn.style.display = 'block';
+                profileName.innerText = currentUser.name;
+                profileEmail.innerText = currentUser.email;
+                welcomeUser.innerText = `Welcome, ${currentUser.name.split(' ')[0]}`;
+                authSpan.innerText = 'My profile';
+                dynamicAuthItem.innerHTML = '<i class="fas fa-user"></i><span>My profile</span>';
+            } else {
+                authNotLoggedIn.style.display = 'block';
+                authLoggedIn.style.display = 'none';
+                welcomeUser.innerText = 'Welcome';
+                authSpan.innerText = 'Create account';
+                dynamicAuthItem.innerHTML = '<i class="fas fa-user-plus"></i><span>Create account</span>';
+            }
+        }
+
+        // Login function (demo)
+        function login(email, password) {
+            if (email && password) {
+                // Use developer name as default after login
+                currentUser = { name: 'Erick Laulent', email: email };
+                loggedIn = true;
+                updateAuthUI();
+                showSection('dashboardSection');
+                userDropdown.classList.remove('show');
+                return true;
+            }
+            return false;
+        }
+
+        // Register function
+        function register(name, email, password) {
+            if (name && email && password) {
+                currentUser = { name: name, email: email };
+                loggedIn = true;
+                updateAuthUI();
+                showSection('dashboardSection');
+                userDropdown.classList.remove('show');
+                return true;
+            }
+            return false;
+        }
+
+        // Logout
+        function logout() {
+            loggedIn = false;
+            currentUser = null;
+            updateAuthUI();
+            showSection('dashboardSection');
+            userDropdown.classList.remove('show');
+        }
+
+        // Event listeners for auth forms
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const pwd = document.getElementById('loginPassword').value.trim();
+            if (!email || !pwd) alert('Please fill both fields');
+            else if (!login(email, pwd)) alert('Invalid credentials (use any)');
+        });
+
+        document.getElementById('registerBtn').addEventListener('click', () => {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const pwd = document.getElementById('regPassword').value.trim();
+            if (!name || !email || !pwd) alert('Please fill all fields');
+            else register(name, email, pwd);
+        });
+
+        // Logout from dropdown and profile
+        logoutItem.addEventListener('click', logout);
+        profileLogoutBtn.addEventListener('click', logout);
+
+        // Auth tabs switching
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const authForms = document.querySelectorAll('.auth-form');
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                authTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const target = tab.dataset.tab;
+                authForms.forEach(form => form.classList.remove('active'));
+                document.getElementById(target === 'login' ? 'loginForm' : 'registerForm').classList.add('active');
+            });
+        });
+
+        // ---------- DATA (customers & transactions) ----------
+        let customers = [];
+        let transactions = [];
+        let nextId = 1;
+
+        // DOM elements for data
+        const showFormBtn = document.getElementById('showFormBtn');
+        const customerForm = document.getElementById('customerForm');
+        const saveBtn = document.getElementById('saveCustomerBtn');
+        const nameInp = document.getElementById('customerName');
+        const codeSel = document.getElementById('countryCode');
+        const phoneInp = document.getElementById('phoneNumber');
+        const amountInp = document.getElementById('amount');
+        const radios = document.getElementsByName('amountType');
+        const customerTbody = document.getElementById('customerListBody');
+        const transactionsTbody = document.getElementById('transactionsListBody');
+
+        // Balance elements
+        const totalDepositedEl = document.getElementById('totalDeposited');
+        const totalPaidEl = document.getElementById('totalPaid');
+        const totalWithdrawEl = document.getElementById('totalWithdraw');
+
+        function renderCustomerTable() {
+            if (customers.length === 0) {
+                customerTbody.innerHTML = '<tr><td colspan="5" class="empty-message">No customers added yet.</td></tr>';
+                return;
+            }
+            let html = '';
+            customers.forEach(c => {
+                let badge = 'type-deposited';
+                if (c.type === 'paid') badge = 'type-paid';
+                else if (c.type === 'withdraw') badge = 'type-withdraw';
+                const phoneDisplay = `${c.code} ${c.phone}`;
+                html += `<tr>
+                    <td>${c.name}</td>
+                    <td>${phoneDisplay}</td>
+                    <td>TZS ${c.amount.toFixed(2)}</td>
+                    <td><span class="type-badge ${badge}">${c.type}</span></td>
+                    <td><button class="delete-btn" onclick="deleteCustomer(${c.id})" title="Delete"><i class="fas fa-trash-alt"></i></button></td>
+                </tr>`;
+            });
+            customerTbody.innerHTML = html;
+        }
+
+        function renderTransactionsTable() {
+            if (transactions.length === 0) {
+                transactionsTbody.innerHTML = '<tr><td colspan="5" class="empty-message">No transactions yet.</td></tr>';
+                return;
+            }
+            let html = '';
+            [...transactions].reverse().forEach(t => {
+                let badge = 'type-deposited';
+                if (t.type === 'paid') badge = 'type-paid';
+                else if (t.type === 'withdraw') badge = 'type-withdraw';
+                const phoneDisplay = `${t.code} ${t.phone}`;
+                html += `<tr>
+                    <td>${t.date}</td>
+                    <td>${t.name}</td>
+                    <td>${phoneDisplay}</td>
+                    <td>TZS ${t.amount.toFixed(2)}</td>
+                    <td><span class="type-badge ${badge}">${t.type}</span></td>
+                </tr>`;
+            });
+            transactionsTbody.innerHTML = html;
+        }
+
+        function updateBalanceSummary() {
+            let deposited = 0, paid = 0, withdraw = 0;
+            transactions.forEach(t => {
+                if (t.type === 'deposited') deposited += t.amount;
+                else if (t.type === 'paid') paid += t.amount;
+                else if (t.type === 'withdraw') withdraw += t.amount;
+            });
+            totalDepositedEl.innerText = `TZS ${deposited.toFixed(2)}`;
+            totalPaidEl.innerText = `TZS ${paid.toFixed(2)}`;
+            totalWithdrawEl.innerText = `TZS ${withdraw.toFixed(2)}`;
+        }
+
+        window.deleteCustomer = function(customerId) {
+            if (confirm('Delete this customer? All their transactions will also be removed.')) {
+                customers = customers.filter(c => c.id !== customerId);
+                transactions = transactions.filter(t => t.customerId !== customerId);
+                renderCustomerTable();
+                if (document.getElementById('transactionsSection').style.display !== 'none') {
+                    renderTransactionsTable();
+                }
+                updateBalanceSummary();
+            }
+        };
+
+        saveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const name = nameInp.value.trim();
+            const phone = phoneInp.value.trim();
+            const amount = amountInp.value.trim();
+            const code = codeSel.value;
+            let type = 'deposited';
+            for (let r of radios) if (r.checked) { type = r.value; break; }
+
+            if (!name || !phone || !amount) { alert('Please fill all fields'); return; }
+            if (isNaN(amount) || Number(amount) <= 0) { alert('Enter a valid amount'); return; }
+
+            const customerId = nextId++;
+            const newCustomer = { id: customerId, name, code, phone, amount: Number(amount), type };
+            customers.push(newCustomer);
+            const transaction = {
+                id: Date.now() + Math.random(),
+                customerId: customerId,
+                name, code, phone, amount: Number(amount), type,
+                date: new Date().toLocaleString()
+            };
+            transactions.push(transaction);
+
+            renderCustomerTable();
+            if (document.getElementById('transactionsSection').style.display !== 'none') {
+                renderTransactionsTable();
+            }
+            updateBalanceSummary();
+
+            // reset form
+            nameInp.value = ''; phoneInp.value = ''; amountInp.value = '';
+            codeSel.value = '+255';
+            document.getElementById('typeDeposited').checked = true;
+            customerForm.classList.remove('show');
+            showFormBtn.style.display = 'inline-flex';
+            alert(`✅ Customer saved.`);
+        });
+
+        showFormBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // prevent immediate outside click trigger
+            showFormBtn.style.display = 'none';
+            customerForm.classList.add('show');
+        });
+
+        // ---------- CLICK OUTSIDE TO CLOSE CUSTOMER FORM ----------
+        document.addEventListener('click', (e) => {
+            // If form is open and click is outside both form and the button that opens it
+            if (customerForm.classList.contains('show') &&
+                !customerForm.contains(e.target) &&
+                e.target !== showFormBtn &&
+                !showFormBtn.contains(e.target)) {
+                customerForm.classList.remove('show');
+                showFormBtn.style.display = 'inline-flex';
+            }
+        });
+
+        // ---------- SECTION NAVIGATION ----------
+        function showSection(sectionId) {
+            document.querySelectorAll('#dashboardSection, #transactionsSection, #balanceSection, #servicesSection, #aboutSection, #contactsSection, #authSection, #settingsSection, #privacySection, #rateSection')
+                .forEach(s => s.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+
+            if (sectionId === 'transactionsSection') {
+                renderTransactionsTable();
+            } else if (sectionId === 'balanceSection') {
+                updateBalanceSummary();
+            } else if (sectionId === 'authSection') {
+                updateAuthUI(); // ensure correct view
+            }
+
+            sideMenu.classList.remove('open');
+            overlay.classList.remove('show');
+            userDropdown.classList.remove('show');
+            // Also close customer form if switching sections
+            if (customerForm.classList.contains('show')) {
+                customerForm.classList.remove('show');
+                showFormBtn.style.display = 'inline-flex';
+            }
+        }
+
+        document.getElementById('menuHome').addEventListener('click', () => showSection('dashboardSection'));
+        document.getElementById('menuTransactions').addEventListener('click', () => showSection('transactionsSection'));
+        document.getElementById('menuBalance').addEventListener('click', () => showSection('balanceSection'));
+        document.getElementById('menuServices').addEventListener('click', () => showSection('servicesSection'));
+        document.getElementById('menuAbout').addEventListener('click', () => showSection('aboutSection'));
+        document.getElementById('menuContacts').addEventListener('click', () => showSection('contactsSection'));
+
+        // Dropdown items
+        dynamicAuthItem.addEventListener('click', () => showSection('authSection'));
+        document.getElementById('settingsItem').addEventListener('click', () => showSection('settingsSection'));
+        document.getElementById('privacyItem').addEventListener('click', () => showSection('privacySection'));
+        document.getElementById('rateItem').addEventListener('click', () => showSection('rateSection'));
+
+        // ---------- THEME TOGGLE ----------
+        const themeLight = document.getElementById('themeLight');
+        const themeDark = document.getElementById('themeDark');
+        const body = document.body;
+
+        themeLight.addEventListener('click', () => {
+            body.classList.remove('dark-theme');
+            document.getElementById('lightTheme').checked = true;
+        });
+        themeDark.addEventListener('click', () => {
+            body.classList.add('dark-theme');
+            document.getElementById('darkTheme').checked = true;
+        });
+
+        // ---------- RATE US ----------
+        document.getElementById('rateNowBtn').addEventListener('click', () => {
+            alert('Thank you for rating! (This would open the app store)');
+        });
+
+        // Star rating hover effect (optional)
+        const stars = document.querySelectorAll('.rate-stars i');
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseenter', () => {
+                for (let i = 0; i <= index; i++) stars[i].style.color = '#f59e0b';
+                for (let i = index+1; i < stars.length; i++) stars[i].style.color = '#fbbf24';
+            });
+            star.addEventListener('mouseleave', () => {
+                stars.forEach(s => s.style.color = '#fbbf24');
+            });
+        });
+
+        // ---------- INITIAL RENDER ----------
+        showSection('dashboardSection');
+        renderCustomerTable();
+        renderTransactionsTable();
+        updateBalanceSummary();
+        updateAuthUI();
+
+        // Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                sideMenu.classList.remove('open');
+                overlay.classList.remove('show');
+                userDropdown.classList.remove('show');
+                if (customerForm.classList.contains('show')) {
+                    customerForm.classList.remove('show');
+                    showFormBtn.style.display = 'inline-flex';
+                }
+            }
+        });
+    })();
+</script>
+</body>
